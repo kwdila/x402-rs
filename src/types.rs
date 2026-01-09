@@ -34,12 +34,14 @@ use crate::timestamp::UnixTimestamp;
 pub enum X402Version {
     /// Version `1`.
     V1,
+    V2
 }
 
 impl Serialize for X402Version {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         match self {
             X402Version::V1 => serializer.serialize_u8(1),
+            X402Version::V2 => serializer.serialize_u8(2),
         }
     }
 }
@@ -48,6 +50,7 @@ impl Display for X402Version {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             X402Version::V1 => write!(f, "1"),
+            X402Version::V2 => write!(f, "2"),
         }
     }
 }
@@ -69,6 +72,7 @@ impl TryFrom<u8> for X402Version {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             1 => Ok(X402Version::V1),
+            2 => Ok(X402Version::V2),
             _ => Err(X402VersionError(value)),
         }
     }
