@@ -30,7 +30,7 @@ use crate::network::Network;
 use crate::timestamp::UnixTimestamp;
 
 /// Represents the protocol version. Currently only version 1 is supported.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone,PartialEq)]
 pub enum X402Version {
     /// Version `1`.
     V1,

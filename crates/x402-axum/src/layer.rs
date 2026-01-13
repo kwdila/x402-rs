@@ -761,11 +761,29 @@ where
         &self,
         payment_payload: PaymentPayload,
     ) -> Result<VerifyRequest, X402Error> {
-        let selected = self
+        let mut selected = self
             .find_matching_payment_requirements(&payment_payload)
             .ok_or(X402Error::no_payment_matching(
                 self.payment_requirements.as_ref().clone(),
             ))?;
+
+        // Solana requires feePayer. If missing, fetch it from /supported (or cached supported).
+        if selected.extra.is_none() && selected.network.to_string().contains("solana") {
+            let supported = self.facilitator.supported().await.map_err(|e| {
+                X402Error::verification_failed(e, self.payment_requirements.as_ref().clone())
+            })?;
+
+            let fee_payer = supported.kinds.iter().find_map(|k| {
+                (k.x402_version == X402Version::V1 && k.scheme == Scheme::Exact && k.network.contains("solana"))
+                    .then(|| k.extra.as_ref())
+                    .flatten()
+                    .and_then(|ex| Some(ex.fee_payer.clone()))
+            });
+
+            if let Some(fp) = fee_payer {
+                selected.extra = Some(json!({ "feePayer": fp }));
+            }
+        }
         let verify_request = VerifyRequest {
             x402_version: payment_payload.x402_version,
             payment_payload,
