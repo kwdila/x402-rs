@@ -774,10 +774,12 @@ where
             })?;
 
             let fee_payer = supported.kinds.iter().find_map(|k| {
-                (k.x402_version == X402Version::V1 && k.scheme == Scheme::Exact && k.network.contains("solana"))
-                    .then(|| k.extra.as_ref())
-                    .flatten()
-                    .and_then(|ex| Some(ex.fee_payer.clone()))
+                (k.x402_version == X402Version::V1
+                    && k.scheme == Scheme::Exact
+                    && k.network.contains("solana"))
+                .then(|| k.extra.as_ref())
+                .flatten()
+                .and_then(|ex| Some(ex.fee_payer.clone()))
             });
 
             if let Some(fp) = fee_payer {
@@ -789,6 +791,12 @@ where
             payment_payload,
             payment_requirements: selected,
         };
+
+        tracing::info!(
+            body = %serde_json::to_string(&verify_request).unwrap_or_default(),
+            "VERIFY REQUEST JSON"
+        );
+
         let verify_response = self
             .facilitator
             .verify(&verify_request)
